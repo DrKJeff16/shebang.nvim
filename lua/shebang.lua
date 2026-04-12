@@ -1,10 +1,10 @@
-local util = require('my-plugin.util')
-local config = require('my-plugin.config')
+local util = require('shebang.util')
+local config = require('shebang.config')
 
----@class MyPlugin
+---@class Shebang
 local M = {}
 
----@param opts? MyPluginOpts
+---@param opts? ShebangOpts
 function M.setup(opts)
   util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
