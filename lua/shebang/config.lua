@@ -1,25 +1,35 @@
-local util = require('shebang.util')
+local Util = require('shebang.util')
+
+---@class ShebangOpts
+---Whether to add a `/usr/bin/env` by default.
+--- ---
+---Default: `false`
+--- ---
+---@field env? boolean
+
+---@class ShebangDefaultOpts: ShebangOpts
+---@field env boolean
 
 ---@class Shebang.Config
+---@field config ShebangOpts
 local M = {}
 
----@return ShebangOpts defaults
+M.config = {}
+
+---@return ShebangDefaultOpts defaults
 function M.get_defaults()
-  return { ---@class ShebangOpts
-    debug = false,
-    foo = true,
-    bar = false,
+  ---@type ShebangDefaultOpts
+  return {
+    env = false,
   }
 end
 
 ---@param opts? ShebangOpts
 function M.setup(opts)
-  util.validate({ opts = { opts, { 'table', 'nil' }, true } })
+  Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
   M.config = vim.tbl_deep_extend('keep', opts or {}, M.get_defaults())
-
-  -- ...
-  vim.g.Shebang_setup = 1 -- OPTIONAL for `health.lua`, delete if you want to
+  vim.g.shebang_setup = 1
 end
 
 return M

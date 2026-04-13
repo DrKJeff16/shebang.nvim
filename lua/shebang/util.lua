@@ -5,8 +5,129 @@
 ---@field [3]? boolean
 ---@field [4]? string
 
+local ERROR = vim.log.levels.ERROR
+
 ---@class Shebang.Util
 local M = {}
+
+---@overload fun(option: string|vim.wo|vim.bo): value: any
+---@overload fun(option: string|vim.wo|vim.bo, param: 'scope', param_value: 'local'|'global'): value: any
+---@overload fun(option: string|vim.wo|vim.bo, param: 'ft', param_value: string): value: any
+---@overload fun(option: string|vim.wo|vim.bo, param: 'buf'|'win', param_value: integer): value: any
+function M.optget(option, param, param_value)
+  M.validate({
+    option = { option, { 'string' } },
+    param = { param, { 'string', 'nil' }, true },
+    param_value = { param_value, { 'string', 'number', 'nil' }, true },
+  })
+  param = param or 'buf'
+  if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
+    error(
+      ('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(
+        vim.inspect(param)
+      ),
+      ERROR
+    )
+  end
+  if param == 'scope' then
+    param_value = param_value or 'local'
+    if not vim.list_contains({ 'global', 'local' }, param_value) then
+      error(
+        ('Bad param value `%s`\nCan only accept `global` or `local`!'):format(
+          vim.inspect(param_value)
+        ),
+        ERROR
+      )
+    end
+  end
+  if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
+    error('Missing/bad value for `ft` parameter!', ERROR)
+  end
+  if vim.list_contains({ 'win', 'buf' }, param) then
+    if
+      not (
+        param_value
+        and type(param_value) == 'number'
+        and M.is_int(param_value, param_value >= 0)
+      )
+    then
+      error('Missing/bad value for `win`/`buf` parameter!', ERROR)
+    end
+  end
+
+  return vim.api.nvim_get_option_value(option, { [param] = param_value })
+end
+
+---@overload fun(option: string|vim.wo|vim.bo, value: any)
+---@overload fun(option: string|vim.wo|vim.bo, value: any, param: 'scope', param_value: 'local'|'global')
+---@overload fun(option: string|vim.wo|vim.bo, value: any, param: 'ft', param_value: string)
+---@overload fun(option: string|vim.wo|vim.bo, value: any, param: 'buf'|'win', param_value: integer)
+function M.optset(option, value, param, param_value)
+  M.validate({
+    option = { option, { 'string' } },
+    param = { param, { 'string', 'nil' }, true },
+    param_value = { param_value, { 'string', 'number', 'nil' }, true },
+  })
+  if value == nil then
+    error('Empty option value is unacceptable!', ERROR)
+  end
+  param = param or 'buf'
+  if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
+    error(
+      ('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(
+        vim.inspect(param)
+      ),
+      ERROR
+    )
+  end
+  if param == 'scope' then
+    param_value = param_value or 'local'
+    if not vim.list_contains({ 'global', 'local' }, param_value) then
+      error(
+        ('Bad param value `%s`\nCan only accept `global` or `local`!'):format(
+          vim.inspect(param_value)
+        ),
+        ERROR
+      )
+    end
+  end
+  if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
+    error('Missing/bad value for `ft` parameter!', ERROR)
+  end
+  if vim.list_contains({ 'win', 'buf' }, param) then
+    if
+      not (
+        param_value
+        and type(param_value) == 'number'
+        and M.is_int(param_value, param_value >= 0)
+      )
+    then
+      error('Missing/bad value for `win`/`buf` parameter!', ERROR)
+    end
+  end
+
+  vim.api.nvim_set_option_value(option, value, { [param] = param_value })
+end
+
+---@param list string[]
+---@return string[] trimmed_list
+function M.trimempty(list)
+  M.validate({ list = { list, { 'table' } } })
+  if not vim.islist(list) then
+    error('Parameter table is not list-like!', ERROR)
+  end
+  if vim.tbl_isempty(list) then
+    return list
+  end
+
+  local trimmed_list = {} ---@type string[]
+  for _, v in ipairs(list) do
+    if v ~= '' then
+      table.insert(trimmed_list, v)
+    end
+  end
+  return trimmed_list
+end
 
 ---Checks whether nvim is running on Windows.
 --- ---
@@ -26,8 +147,7 @@ end
 ---@return any[] NT
 function M.dedup(T)
   M.validate({ T = { T, { 'table' } } })
-
-  if vim.tbl_isempty(T) then
+  if vim.tbl_isempty(T) or not vim.islist(T) then
     return T
   end
 
@@ -292,6 +412,24 @@ function M.strip(char, str)
 
   ---@cast char string
   return M.rstrip(char, M.lstrip(char, str))
+end
+
+---@param exe string
+---@return string path
+function M.exe_path(exe)
+  M.validate({ exe = { exe, { 'string' } } })
+
+  local split = M.trimempty(
+    vim.split(
+      vim.api.nvim_exec2(
+        ('!%s %s'):format(M.executable('which') and 'which' or 'command -v', exe),
+        { output = true }
+      ).output,
+      '\n',
+      { trimempty = true }
+    )
+  )
+  return split[#split]
 end
 
 return M
