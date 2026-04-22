@@ -19,7 +19,7 @@ jobs:
       - name: Build Project Assets
         run: |
           mkdir -pv shebang.nvim
-          cp -rv lua doc README.md CREDITS.md LICENSE Makefile shebang.nvim
+          cp -rv lua README.md LICENSE shebang.nvim
           zip -r -9 shebang.nvim.zip shebang.nvim
           tar cvJf shebang.nvim.tar.xz shebang.nvim
           tar cvzf shebang.nvim.tar.gz shebang.nvim
