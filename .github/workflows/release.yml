@@ -1,0 +1,56 @@
+name: Action Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-*"
+  merge_group:
+    branches:
+      - main
+  release:
+    types:
+      - created
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      - name: Build Project Assets
+        run: |
+          mkdir -pv shebang.nvim
+          cp -rv lua doc README.md CREDITS.md LICENSE Makefile shebang.nvim
+          zip -r -9 shebang.nvim.zip shebang.nvim
+          tar cvJf shebang.nvim.tar.xz shebang.nvim
+          tar cvzf shebang.nvim.tar.gz shebang.nvim
+          7z a -mx9 -mmt -sdel shebang.nvim.7z shebang.nvim
+          sha512sum shebang.nvim.7z shebang.nvim.zip shebang.nvim.tar.xz shebang.nvim.7z shebang.nvim.tar.gz >| sha512sums.txt
+          md5sum shebang.nvim.7z shebang.nvim.zip shebang.nvim.tar.xz shebang.nvim.7z shebang.nvim.tar.gz >| md5sums.txt
+      - name: Get Release
+        uses: joutvhu/get-release@v1.0.3
+        with:
+          latest: true
+          prerelease: true
+          pattern: "^v.*"
+          debug: true
+          throwing: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Release File
+        run: |
+          echo ${{ github.sha }} >| Release.txt
+          cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            Release.txt
+            md5sums.txt
+            sha512sums.txt
+            shebang.nvim.7z
+            shebang.nvim.tar.gz
+            shebang.nvim.tar.xz
+            shebang.nvim.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+# vim: set ts=2 sts=2 sw=2 et ai si sta:
