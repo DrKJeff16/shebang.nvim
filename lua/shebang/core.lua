@@ -2,49 +2,45 @@ local ERROR = vim.log.levels.ERROR
 local Util = require('shebang.util')
 local Config = require('shebang.config')
 
+local langs_dict = {
+  bash = 'sh',
+  csh = 'csh',
+  fish = 'fish',
+  lua = 'lua',
+  luajit = 'lua',
+  node = 'javascript',
+  perl = 'perl',
+  python = 'python',
+  python3 = 'python3',
+  ruby = 'ruby',
+  sh = 'sh',
+  tclsh = 'tcl',
+  zsh = 'zsh',
+}
+
 ---@class Shebang.Core
 local M = {}
 
 ---@param bufnr integer
+---@param prog string
+---@param ft string
 ---@param lines string[]
-function M.shebang_lines_write(bufnr, lines)
+function M.shebang_lines_write(bufnr, prog, ft, lines)
   Util.validate({
     bufnr = { bufnr, { 'number' } },
+    prog = { prog, { 'string' } },
+    ft = { ft, { 'string' } },
     lines = { lines, { 'table' } },
   })
   bufnr = Util.is_int(bufnr, bufnr >= 0) and bufnr or 0
 
-  vim.g.shebang_count = 0
-
-  local win = vim.api.nvim_get_current_win()
-  local do_shebang = vim.schedule_wrap(function()
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-    vim.g.shebang_count = vim.g.shebang_count + 1
-    vim.cmd.write()
-    vim.g.shebang_count = vim.g.shebang_count + 1
-    vim.cmd.edit()
-    vim.g.shebang_count = vim.g.shebang_count + 1
-  end)
-  local comment = vim.schedule_wrap(function()
-    vim.api.nvim_win_set_cursor(win, { 1, 0 })
-    vim.api.nvim_feedkeys(
-      require('Comment.api').call('toggle.linewise.current', 'g@$')(),
-      'n',
-      false
-    )
-    vim.g.shebang_count = vim.g.shebang_count + 1
-  end)
-
-  local old_pos = vim.api.nvim_win_get_cursor(win)
-
-  do_shebang()
-  comment()
-  vim.api.nvim_win_set_cursor(win, old_pos)
+  vim.api.nvim_set_option_value('filetype', ft, { buf = bufnr })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
 end
 
 ---@param prog string
 ---@param env? boolean
----@return string shebang
+---@return string|nil shebang
 function M.gen_shebang(prog, env)
   Util.validate({
     prog = { prog, { 'string' } },
@@ -52,9 +48,6 @@ function M.gen_shebang(prog, env)
   })
   if env == nil then
     env = Config.config.env ~= nil and Config.config.env or Config.get_defaults().env --[[@as boolean]]
-  end
-  if not Util.executable(prog) then
-    error(('Executable not found: `%s`'):format(prog), ERROR)
   end
 
   if env then
@@ -64,17 +57,30 @@ function M.gen_shebang(prog, env)
 end
 
 ---@param bufnr integer
----@param prog string
+---@param prog string[]
 ---@param env? boolean
 function M.write_shebang(bufnr, prog, env)
   Util.validate({
     bufnr = { bufnr, { 'number' } },
-    prog = { prog, { 'string' } },
+    prog = { prog, { 'table' } },
     env = { env, { 'boolean', 'nil' }, true },
   })
   bufnr = Util.is_int(bufnr, bufnr >= 0) and bufnr or 0
   if env == nil then
     env = Config.config.env ~= nil and Config.config.env or Config.get_defaults().env --[[@as boolean]]
+  end
+
+  local ft = nil ---@type string|nil
+  for _, pos in ipairs(prog) do
+    if vim.list_contains(vim.tbl_keys(langs_dict), pos) then
+      ft = langs_dict[pos]
+      break
+    end
+  end
+
+  if not ft then
+    vim.notify('(shebang.nvim): Unavailable filetype!', ERROR)
+    return
   end
 
   if not Util.mod_exists('Comment.api') then
@@ -92,12 +98,28 @@ function M.write_shebang(bufnr, prog, env)
     return
   end
 
-  local shebang = M.gen_shebang(prog, env)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
-  table.insert(lines, 1, shebang)
+  local shebang = M.gen_shebang(table.concat(prog, ' '), env)
+  if not shebang then
+    vim.notify('(shebang.nvim): Unable to generate shebang!', ERROR)
+    return
+  end
 
-  vim.cmd.undojoin()
-  M.shebang_lines_write(bufnr, lines)
+  local win = vim.api.nvim_get_current_win()
+  local pos = vim.deepcopy(vim.api.nvim_win_get_cursor(win))
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  if lines[1]:find('^%#%!.*$') then
+    lines[1] = shebang
+  else
+    table.insert(lines, 1, shebang)
+    pos[1] = pos[1] + 1
+  end
+
+  pcall(vim.cmd.undojoin)
+  pcall(vim.cmd.write, { bang = true })
+  M.shebang_lines_write(bufnr, table.concat(prog, ' '), ft, lines)
+  pcall(vim.cmd.write, { bang = true })
+
+  vim.api.nvim_win_set_cursor(win, pos)
 end
 
 return M

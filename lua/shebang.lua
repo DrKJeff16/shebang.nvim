@@ -20,7 +20,8 @@ function M.setup(opts)
       env = not env
     end
 
-    require('shebang.core').write_shebang(vim.api.nvim_get_current_buf(), table.concat(ctx.fargs))
+    vim.print(ctx.fargs)
+    require('shebang.core').write_shebang(vim.api.nvim_get_current_buf(), ctx.fargs, env)
   end, { bang = true, nargs = '+', desc = 'Create a shebang on top of the current file' })
 end
 
