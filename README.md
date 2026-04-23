@@ -16,6 +16,7 @@ Add any shebang to the top of your script.
   - [`nvim-plug`](#nvim-plug)
   - [`paq-nvim`](#paq-nvim)
   - [`vim.pack`](#vimpack)
+  - [LuaRocks](#luarocks)
 - [Configuration](#configuration)
 - [Usage](#usage)
 
@@ -109,8 +110,6 @@ vim.pack.add({
 })
 ```
 
-<!--
-
 ### LuaRocks
 
 The package can be found [in the LuaRocks webpage](https://luarocks.org/modules/drkjeff16/shebang.nvim).
@@ -119,8 +118,6 @@ The package can be found [in the LuaRocks webpage](https://luarocks.org/modules/
 luarocks install shebang.nvim # Global install
 luarocks install --local shebang.nvim # Local install
 ```
-
--->
 
 ---
 
