@@ -19,6 +19,7 @@ Add any shebang to the top of your script.
   - [LuaRocks](#luarocks)
 - [Configuration](#configuration)
 - [Usage](#usage)
+  - [File Mode](#file-mode)
 
 ---
 
@@ -125,8 +126,19 @@ luarocks install --local shebang.nvim # Local install
 
 ```lua
 require('shebang').setup({
-  -- If enabled, `#!/usr/bin/env` will be used as a prefix by default
+  ---Whether to automatically make the target file an executable.
+  auto_make_executable = false,
+
+  ---Whether to add a `/usr/bin/env` by default.
   env = false,
+
+  ---If `auto_make_executable` is enabled, indicates what file mode will be used.
+  ---
+  ---The string is 3 characters long, all must be numbers.
+  ---
+  ---See https://www.geeksforgeeks.org/linux-unix/chmod-command-linux/ to understand
+  ---how `chmod` works.
+  file_mode = '755',
 })
 ```
 
@@ -148,6 +160,19 @@ that command. For example:
 " If `env` is `false`, the command will add `#!/usr/bin/env bash`.
 " Otherwise, `#!/usr/bin/bash` will be added
 :Shebang! bash
+```
+
+### File Mode
+
+If you set `file_mode` to `true` in your setup, you can also set a custom file mode for your file
+when passing `mode=[0-7][0-7][0-7]` to `:Shebang`. **The parameter must be the first positional
+to work.**
+
+```vim
+:Shebang mode=700 bash " Sets a shebang to bash and the file will change permissions to `rwx------`
+:Shebang mode=677 python " Sets a shebang to python and the file will change permissions to `rw-rwxrwx`
+
+:Shebang python mode=644 " THIS WILL NOT WORK
 ```
 
 ---

@@ -6,9 +6,38 @@
 ---@field [4]? string
 
 local ERROR = vim.log.levels.ERROR
+local MODSTR = 'shebang.util'
 
 ---@class Shebang.Util
 local M = {}
+
+---@param nums number[]|number
+---@param cond? boolean
+---@return boolean int
+---@nodiscard
+function M.is_int(nums, cond)
+  M.validate({
+    nums = { nums, { 'number', 'table' } },
+    cond = { cond, { 'boolean', 'nil' }, true },
+  })
+  if cond == nil then
+    cond = true
+  end
+
+  if M.is_type('number', nums) then
+    ---@cast nums number
+    return nums == math.floor(nums) and nums == math.ceil(nums) and cond
+  end
+
+  ---@cast nums number[]
+  for _, num in ipairs(nums) do
+    if not M.is_int(num) then
+      return false
+    end
+  end
+
+  return cond
+end
 
 ---@overload fun(option: string|vim.wo|vim.bo): value: any
 ---@overload fun(option: string|vim.wo|vim.bo, param: 'scope', param_value: 'local'|'global'): value: any
@@ -260,22 +289,6 @@ function M.mod_exists(mod, ret)
   end
 
   return exists
-end
-
----Checks if a given number is type integer.
---- ---
----@param num number
----@param cond? boolean
----@return boolean int
-function M.is_int(num, cond)
-  M.validate({
-    num = { num, { 'number' } },
-    cond = { cond, { 'boolean', 'nil' }, true },
-  })
-  cond = cond ~= nil and cond or true
-
-  local is_int = math.floor(num) == num and math.ceil(num) == num
-  return is_int and cond
 end
 
 ---Checks whether `data` is of type `t` or not.

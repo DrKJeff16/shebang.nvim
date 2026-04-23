@@ -1,4 +1,7 @@
+#!/usr/bin/env bash
+local uv = vim.uv or vim.loop
 local ERROR = vim.log.levels.ERROR
+local MODSTR = 'shebang.core'
 local Util = require('shebang.util')
 local Config = require('shebang.config')
 
@@ -6,6 +9,7 @@ local langs_dict = {
   bash = 'sh',
   csh = 'csh',
   fish = 'fish',
+  julia = 'julia',
   lua = 'lua',
   luajit = 'lua',
   node = 'javascript',
@@ -38,6 +42,20 @@ function M.shebang_lines_write(bufnr, prog, ft, lines)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
 end
 
+---@param path string
+---@param mode? string
+function M.make_executable(path, mode)
+  Util.validate({
+    path = { path, { 'string' } },
+    mode = { mode, { 'string', 'nil' }, true },
+  })
+  mode = Config.check_mode(mode or Config.config.file_mode)
+
+  if not uv.fs_chmod(path, tonumber(mode, 8)) then
+    vim.notify(('(%s.make_executable): Failed to make file executable!'):format(MODSTR), ERROR)
+  end
+end
+
 ---@param prog string
 ---@param env? boolean
 ---@return string|nil shebang
@@ -50,25 +68,26 @@ function M.gen_shebang(prog, env)
     env = Config.config.env ~= nil and Config.config.env or Config.get_defaults().env --[[@as boolean]]
   end
 
-  if env then
-    return ('#!%s %s'):format(Util.exe_path('env'), prog)
-  end
-  return ('#!%s'):format(Util.exe_path(prog))
+  return '#!'
+    .. (env and ('%s %s'):format(Util.exe_path('env'), prog) or ('%s'):format(Util.exe_path(prog)))
 end
 
 ---@param bufnr integer
 ---@param prog string[]
 ---@param env? boolean
-function M.write_shebang(bufnr, prog, env)
+---@param mode? string
+function M.write_shebang(bufnr, prog, env, mode)
   Util.validate({
     bufnr = { bufnr, { 'number' } },
     prog = { prog, { 'table' } },
     env = { env, { 'boolean', 'nil' }, true },
+    mode = { mode, { 'string', 'nil' }, true },
   })
   bufnr = Util.is_int(bufnr, bufnr >= 0) and bufnr or 0
   if env == nil then
-    env = Config.config.env ~= nil and Config.config.env or Config.get_defaults().env --[[@as boolean]]
+    env = Config.config.env
   end
+  mode = mode or Config.config.file_mode
 
   local ft = nil ---@type string|nil
   for _, pos in ipairs(prog) do
@@ -114,12 +133,22 @@ function M.write_shebang(bufnr, prog, env)
     pos[1] = pos[1] + 1
   end
 
+  vim.cmd.write({ bang = true })
   pcall(vim.cmd.undojoin)
-  pcall(vim.cmd.write, { bang = true })
   M.shebang_lines_write(bufnr, table.concat(prog, ' '), ft, lines)
-  pcall(vim.cmd.write, { bang = true })
+  vim.cmd.write({ bang = true })
 
   vim.api.nvim_win_set_cursor(win, pos)
+
+  if Config.config.auto_make_executable then
+    local path = Util.rstrip('/', vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':p'))
+    if not (vim.fn.filereadable(path) == 1 and vim.fn.filewritable(path) == 1) then
+      return
+    end
+
+    pcall(vim.cmd.undojoin)
+    M.make_executable(path, mode)
+  end
 end
 
 return M
