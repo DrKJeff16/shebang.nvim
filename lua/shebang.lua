@@ -24,11 +24,22 @@ local function completor(_, line)
     return {}
   end
 
-  if not (#args == 2 and args[2]:len() > 0 and vim.startswith('mode=', args[2])) then
-    return {}
+  if #args == 2 and args[2]:len() > 0 and vim.startswith('mode=', args[2]) then
+    return { 'mode=' }
+  end
+  if #args == 2 or (#args == 3 and vim.startswith(args[2], 'mode=')) then
+    local items, keys = {}, vim.tbl_keys(require('shebang.core').langs_dict) ---@type string[], string[]
+    for _, v in ipairs(keys) do
+      if vim.startswith(v, args[#args]) and not vim.list_contains(items, v) then
+        table.insert(items, v)
+      end
+    end
+
+    table.sort(items)
+    return items
   end
 
-  return { 'mode=' }
+  return {}
 end
 
 ---@class Shebang

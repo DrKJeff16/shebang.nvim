@@ -5,7 +5,11 @@ local MODSTR = 'shebang.core'
 local Util = require('shebang.util')
 local Config = require('shebang.config')
 
-local langs_dict = {
+---@class Shebang.Core
+---@field langs_dict table<string, string>
+local M = {}
+
+M.langs_dict = {
   bash = 'sh',
   csh = 'csh',
   fish = 'fish',
@@ -21,9 +25,6 @@ local langs_dict = {
   tclsh = 'tcl',
   zsh = 'zsh',
 }
-
----@class Shebang.Core
-local M = {}
 
 ---@param bufnr integer
 ---@param prog string
@@ -91,8 +92,8 @@ function M.write_shebang(bufnr, prog, env, mode)
 
   local ft = nil ---@type string|nil
   for _, pos in ipairs(prog) do
-    if vim.list_contains(vim.tbl_keys(langs_dict), pos) then
-      ft = langs_dict[pos]
+    if vim.list_contains(vim.tbl_keys(M.langs_dict), pos) then
+      ft = M.langs_dict[pos]
       break
     end
   end
@@ -133,10 +134,9 @@ function M.write_shebang(bufnr, prog, env, mode)
     pos[1] = pos[1] + 1
   end
 
-  vim.cmd.write({ bang = true })
-  pcall(vim.cmd.undojoin)
+  vim.cmd.redraw()
   M.shebang_lines_write(bufnr, table.concat(prog, ' '), ft, lines)
-  vim.cmd.write({ bang = true })
+  pcall(vim.cmd.undojoin)
 
   vim.api.nvim_win_set_cursor(win, pos)
 
