@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 local uv = vim.uv or vim.loop
 local ERROR = vim.log.levels.ERROR
 local MODSTR = 'shebang.core'
@@ -23,6 +22,7 @@ M.langs_dict = {
   ruby = 'ruby',
   sh = 'sh',
   tclsh = 'tcl',
+  vim = 'vim',
   zsh = 'zsh',
 }
 
@@ -134,7 +134,6 @@ function M.write_shebang(bufnr, prog, env, mode)
     pos[1] = pos[1] + 1
   end
 
-  vim.cmd.redraw()
   M.shebang_lines_write(bufnr, table.concat(prog, ' '), ft, lines)
   pcall(vim.cmd.undojoin)
 
@@ -146,8 +145,10 @@ function M.write_shebang(bufnr, prog, env, mode)
       return
     end
 
-    pcall(vim.cmd.undojoin)
-    M.make_executable(path, mode)
+    local ok = pcall(vim.cmd.write, { bang = true })
+    if ok then
+      M.make_executable(path, mode)
+    end
   end
 end
 
