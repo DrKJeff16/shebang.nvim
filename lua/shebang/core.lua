@@ -14,6 +14,11 @@ M.langs_dict = {
   fish = 'fish',
   julia = 'julia',
   lua = 'lua',
+  ['lua5.1'] = 'lua',
+  ['lua5.2'] = 'lua',
+  ['lua5.3'] = 'lua',
+  ['lua5.4'] = 'lua',
+  ['lua5.5'] = 'lua',
   luajit = 'lua',
   node = 'javascript',
   perl = 'perl',
@@ -23,6 +28,7 @@ M.langs_dict = {
   sh = 'sh',
   tclsh = 'tcl',
   vim = 'vim',
+  yash = 'sh',
   zsh = 'zsh',
 }
 
