@@ -51,35 +51,19 @@ function M.optget(option, param, param_value)
   })
   param = param or 'buf'
   if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
-    error(
-      ('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(
-        vim.inspect(param)
-      ),
-      ERROR
-    )
+    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)), ERROR)
   end
   if param == 'scope' then
     param_value = param_value or 'local'
     if not vim.list_contains({ 'global', 'local' }, param_value) then
-      error(
-        ('Bad param value `%s`\nCan only accept `global` or `local`!'):format(
-          vim.inspect(param_value)
-        ),
-        ERROR
-      )
+      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)), ERROR)
     end
   end
   if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
     error('Missing/bad value for `ft` parameter!', ERROR)
   end
   if vim.list_contains({ 'win', 'buf' }, param) then
-    if
-      not (
-        param_value
-        and type(param_value) == 'number'
-        and M.is_int(param_value, param_value >= 0)
-      )
-    then
+    if not (param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0)) then
       error('Missing/bad value for `win`/`buf` parameter!', ERROR)
     end
   end
@@ -102,35 +86,19 @@ function M.optset(option, value, param, param_value)
   end
   param = param or 'buf'
   if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
-    error(
-      ('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(
-        vim.inspect(param)
-      ),
-      ERROR
-    )
+    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)), ERROR)
   end
   if param == 'scope' then
     param_value = param_value or 'local'
     if not vim.list_contains({ 'global', 'local' }, param_value) then
-      error(
-        ('Bad param value `%s`\nCan only accept `global` or `local`!'):format(
-          vim.inspect(param_value)
-        ),
-        ERROR
-      )
+      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)), ERROR)
     end
   end
   if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
     error('Missing/bad value for `ft` parameter!', ERROR)
   end
   if vim.list_contains({ 'win', 'buf' }, param) then
-    if
-      not (
-        param_value
-        and type(param_value) == 'number'
-        and M.is_int(param_value, param_value >= 0)
-      )
-    then
+    if not (param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0)) then
       error('Missing/bad value for `win`/`buf` parameter!', ERROR)
     end
   end
@@ -434,10 +402,7 @@ function M.exe_path(exe)
 
   local split = M.trimempty(
     vim.split(
-      vim.api.nvim_exec2(
-        ('!%s %s'):format(M.executable('which') and 'which' or 'command -v', exe),
-        { output = true }
-      ).output,
+      vim.api.nvim_exec2(('!%s %s'):format(M.executable('which') and 'which' or 'command -v', exe), { output = true }).output,
       '\n',
       { trimempty = true }
     )

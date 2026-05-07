@@ -69,8 +69,7 @@ function M.gen_shebang(prog, env)
     env = Config.config.env ~= nil and Config.config.env or Config.get_defaults().env --[[@as boolean]]
   end
 
-  return '#!'
-    .. (env and ('%s %s'):format(Util.exe_path('env'), prog) or ('%s'):format(Util.exe_path(prog)))
+  return '#!' .. (env and ('%s %s'):format(Util.exe_path('env'), prog) or ('%s'):format(Util.exe_path(prog)))
 end
 
 ---@param bufnr integer
