@@ -1,5 +1,5 @@
 ---Non-legacy validation spec (>=v0.11)
----@class ValidateSpec
+---@class Shebang.ValidateSpec
 ---@field [1] any
 ---@field [2] vim.validate.Validator
 ---@field [3]? boolean
@@ -172,7 +172,7 @@ end
 
 ---Dynamic `vim.validate()` wrapper which covers both legacy and newer implementations.
 --- ---
----@param T table<string, vim.validate.Spec|ValidateSpec>
+---@param T table<string, vim.validate.Spec|Shebang.ValidateSpec>
 function M.validate(T)
   local max = vim.fn.has('nvim-0.11') == 1 and 3 or 4
   for name, spec in pairs(T) do
@@ -182,11 +182,13 @@ function M.validate(T)
     T[name] = spec
   end
 
-  if vim.fn.has('nvim-0.11') ~= 1 then
+  if max == 4 then
+    ---@cast T table<string, vim.validate.Spec>
     vim.validate(T)
     return
   end
 
+  ---@cast T table<string, Shebang.ValidateSpec>
   for name, spec in pairs(T) do
     table.insert(spec, 1, name)
     vim.validate(unpack(spec))
@@ -197,13 +199,12 @@ end
 ---@return integer len
 function M.get_dict_size(T)
   M.validate({ T = { T, { 'table' } } })
-
   if vim.tbl_isempty(T) then
     return 0
   end
 
   local len = 0
-  for _, _ in pairs(T) do
+  for _ in pairs(T) do
     len = len + 1
   end
   return len
@@ -220,7 +221,6 @@ end
 ---@return any[] T
 function M.reverse(T)
   M.validate({ T = { T, { 'table' } } })
-
   if vim.tbl_isempty(T) then
     return T
   end
@@ -234,18 +234,16 @@ end
 
 ---Checks if module `mod` exists to be imported.
 --- ---
----@param mod string The `require()` argument to be checked
----@param ret? boolean Whether to return the called module
----@return boolean exists A boolean indicating whether the module exists or not
----@return unknown? module
----@overload fun(mod: string): exists: boolean
+---@overload fun(mod: string, ret?: false): exists: boolean
+---@overload fun(mod: string, ret: true): exists: boolean, module: unknown?
 function M.mod_exists(mod, ret)
   M.validate({
     mod = { mod, { 'string' } },
     ret = { ret, { 'boolean', 'nil' }, true },
   })
-  ret = ret ~= nil and ret or false
-
+  if ret == nil then
+    ret = false
+  end
   if mod == '' then
     return false
   end
@@ -254,7 +252,6 @@ function M.mod_exists(mod, ret)
   if ret then
     return exists, module
   end
-
   return exists
 end
 
@@ -274,14 +271,13 @@ end
 function M.executable(exe)
   M.validate({ exe = { exe, { 'string', 'table' } } })
 
-  ---@cast exe string
   if M.is_type('string', exe) then
+    ---@cast exe string
     return vim.fn.executable(exe) == 1
   end
 
-  local res = false
-
   ---@cast exe string[]
+  local res = false
   for _, v in ipairs(exe) do
     res = M.executable(v)
     if not res then

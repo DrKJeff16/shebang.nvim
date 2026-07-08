@@ -1,11 +1,10 @@
-local Util = require('shebang.util')
-
 ---@class Shebang.Health
 local M = {}
 
 function M.check()
-  vim.health.start('Dependencies')
+  local Util = require('shebang.util')
 
+  vim.health.start('Dependencies')
   if not Util.mod_exists('Comment') then
     vim.health.error('`Comment.nvim` not installed!')
     return

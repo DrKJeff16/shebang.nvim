@@ -9,7 +9,7 @@ local Config = require('shebang.config')
 local M = {}
 
 M.langs_dict = {
-  bash = 'sh',
+  bash = 'bash',
   csh = 'csh',
   fish = 'fish',
   julia = 'julia',
@@ -23,7 +23,8 @@ M.langs_dict = {
   node = 'javascript',
   perl = 'perl',
   python = 'python',
-  python3 = 'python3',
+  python2 = 'python2',
+  python3 = 'python',
   ruby = 'ruby',
   sh = 'sh',
   tclsh = 'tcl',
@@ -107,7 +108,6 @@ function M.write_shebang(bufnr, prog, env, mode)
     vim.notify('(shebang.nvim): Unavailable filetype!', ERROR)
     return
   end
-
   if not Util.mod_exists('Comment.api') then
     vim.notify('(shebang.nvim): `Comment.nvim` is not installed!', ERROR)
     return
@@ -146,11 +146,7 @@ function M.write_shebang(bufnr, prog, env, mode)
 
   if Config.get().auto_make_executable then
     local path = Util.rstrip('/', vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':p'))
-    if not (vim.fn.filereadable(path) == 1 and vim.fn.filewritable(path) == 1) then
-      return
-    end
-
-    if pcall(vim.cmd.write, { bang = true }) then
+    if vim.fn.filereadable(path) == 1 and vim.fn.filewritable(path) == 1 and pcall(vim.cmd.write, { bang = true }) then
       M.make_executable(path, mode)
     end
   end

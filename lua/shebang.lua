@@ -43,6 +43,10 @@ local function completor(_, line)
 end
 
 ---@class Shebang
+---@field config Shebang.Config
+---@field core Shebang.Core
+---@field health Shebang.Health
+---@field util Shebang.Util
 local M = {}
 
 ---@param opts? ShebangOpts
@@ -62,5 +66,16 @@ function M.setup(opts)
   })
 end
 
-return M
+local Shebang = setmetatable(M, { ---@type Shebang
+  ---@param self Shebang
+  ---@param k string|integer
+  __index = function(self, k)
+    if Util.mod_exists('shebang.' .. k) then
+      return require('shebang.' .. k)
+    end
+    return rawget(self, k) or nil
+  end,
+})
+
+return Shebang
 -- vim: set ts=2 sts=2 sw=2 et ai si sta:
