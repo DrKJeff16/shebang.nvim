@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.2.2-1](https://github.com/DrKJeff16/shebang.nvim/tree/v0.2.2-1) (2026-07-08)
+
+[Full Changelog](https://github.com/DrKJeff16/shebang.nvim/compare/v0.2.1-1...v0.2.2-1)
+
+## [v0.2.1-1](https://github.com/DrKJeff16/shebang.nvim/tree/v0.2.1-1) (2026-04-29)
+
+[Full Changelog](https://github.com/DrKJeff16/shebang.nvim/compare/v0.2.0-1...v0.2.1-1)
+
+## [v0.2.0-1](https://github.com/DrKJeff16/shebang.nvim/tree/v0.2.0-1) (2026-04-24)
+
+[Full Changelog](https://github.com/DrKJeff16/shebang.nvim/compare/v0.1.0-1...v0.2.0-1)
+
 ## [v0.1.0-1](https://github.com/DrKJeff16/shebang.nvim/tree/v0.1.0-1) (2026-04-23)
 
 [Full Changelog](https://github.com/DrKJeff16/shebang.nvim/compare/v0.0.1-1...v0.1.0-1)
