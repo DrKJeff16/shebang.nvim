@@ -10,13 +10,6 @@ Add any shebang to the top of your script.
 ## Table of Contents
 
 - [Installation](#installation)
-  - [`vim-plug`](#vim-plug)
-  - [`lazy.nvim`](#lazynvim)
-  - [`pckr.nvim`](#pckrnvim)
-  - [`nvim-plug`](#nvim-plug)
-  - [`paq-nvim`](#paq-nvim)
-  - [`vim.pack`](#vimpack)
-  - [LuaRocks](#luarocks)
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [File Mode](#file-mode)
@@ -35,14 +28,17 @@ please raise a [**_BLANK ISSUE_**](https://github.com/DrKJeff16/shebang.nvim/iss
 
 Use any plugin manager of your choosing.
 
-### `vim-plug`
+<details>
+<summary><code>vim-plug</code></summary>
 
 ```vim
 Plug 'DrKJeff16/shebang.nvim'
 Plug 'numToStr/Comment.nvim'
 ```
 
-### `lazy.nvim`
+</details>
+<details>
+<summary><code>lazy.nvim</code></summary>
 
 ```lua
 {
@@ -64,8 +60,9 @@ If you wish to lazy-load this plugin:
   opts = {},
 }
 ```
-
-### `pckr.nvim`
+</details>
+<details>
+<summary><code>pckr.nvim</code></summary>
 
 ```lua
 require('pckr').add({
@@ -79,7 +76,9 @@ require('pckr').add({
 })
 ```
 
-### `nvim-plug`
+</details>
+<details>
+<summary><code>nvim-plug</code></summary>
 
 ```lua
 require('plug').add({
@@ -93,7 +92,9 @@ require('plug').add({
 })
 ```
 
-### `paq-nvim`
+</details>
+<details>
+<summary><code>paq-nvim</code></summary>
 
 ```lua
 local paq = require('paq')
@@ -103,7 +104,9 @@ paq({
 })
 ```
 
-### `vim.pack`
+</details>
+<details>
+<summary><code>vim.pack</code></summary>
 
 ```lua
 vim.pack.add({
@@ -111,7 +114,9 @@ vim.pack.add({
 })
 ```
 
-### LuaRocks
+</details>
+<details>
+<summary>LuaRocks</summary>
 
 The package can be found [in the LuaRocks webpage](https://luarocks.org/modules/drkjeff16/shebang.nvim).
 
@@ -119,6 +124,8 @@ The package can be found [in the LuaRocks webpage](https://luarocks.org/modules/
 luarocks install shebang.nvim # Global install
 luarocks install --local shebang.nvim # Local install
 ```
+
+</details>
 
 ---
 
