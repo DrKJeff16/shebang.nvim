@@ -6,7 +6,6 @@
 ---@field [4]? string
 
 local ERROR = vim.log.levels.ERROR
-local MODSTR = 'shebang.util'
 
 ---@class Shebang.Util
 local M = {}

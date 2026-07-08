@@ -2,7 +2,7 @@ local Util = require('shebang.util')
 
 ---@param ctx vim.api.keyset.create_user_command.command_args
 local function callback(ctx)
-  local env = require('shebang.config').config.env --[[@as boolean]]
+  local env = require('shebang.config').get().env --[[@as boolean]]
   if ctx.bang then
     env = not env
   end

@@ -56,7 +56,7 @@ function M.make_executable(path, mode)
     path = { path, { 'string' } },
     mode = { mode, { 'string', 'nil' }, true },
   })
-  mode = Config.check_mode(mode or Config.config.file_mode)
+  mode = Config.check_mode(mode or Config.get().file_mode)
 
   if not uv.fs_chmod(path, tonumber(mode, 8)) then
     vim.notify(('(%s.make_executable): Failed to make file executable!'):format(MODSTR), ERROR)
@@ -72,7 +72,7 @@ function M.gen_shebang(prog, env)
     env = { env, { 'boolean', 'nil' }, true },
   })
   if env == nil then
-    env = Config.config.env ~= nil and Config.config.env or Config.get_defaults().env --[[@as boolean]]
+    env = Config.get().env ~= nil and Config.get().env or Config.get_defaults().env --[[@as boolean]]
   end
 
   return '#!' .. (env and ('%s %s'):format(Util.exe_path('env'), prog) or ('%s'):format(Util.exe_path(prog)))
@@ -91,9 +91,9 @@ function M.write_shebang(bufnr, prog, env, mode)
   })
   bufnr = Util.is_int(bufnr, bufnr >= 0) and bufnr or 0
   if env == nil then
-    env = Config.config.env
+    env = Config.get().env
   end
-  mode = mode or Config.config.file_mode
+  mode = mode or Config.get().file_mode
 
   local ft = nil ---@type string|nil
   for _, pos in ipairs(prog) do
@@ -144,14 +144,13 @@ function M.write_shebang(bufnr, prog, env, mode)
 
   vim.api.nvim_win_set_cursor(win, pos)
 
-  if Config.config.auto_make_executable then
+  if Config.get().auto_make_executable then
     local path = Util.rstrip('/', vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':p'))
     if not (vim.fn.filereadable(path) == 1 and vim.fn.filewritable(path) == 1) then
       return
     end
 
-    local ok = pcall(vim.cmd.write, { bang = true })
-    if ok then
+    if pcall(vim.cmd.write, { bang = true }) then
       M.make_executable(path, mode)
     end
   end
