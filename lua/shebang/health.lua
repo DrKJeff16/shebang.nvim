@@ -5,16 +5,15 @@ function M.check()
   local Util = require('shebang.util')
 
   vim.health.start('Dependencies')
-  if not Util.mod_exists('Comment') then
-    vim.health.error('`Comment.nvim` not installed!')
-    return
-  end
-  vim.health.ok('`Comment.nvim` installed!')
-
-  if Util.executable('chmod') then
-    vim.health.ok('`chmod` in `PATH`!')
+  if Util.mod_exists('Comment') then
+    vim.health.ok('`Comment.nvim` installed!')
+    if Util.executable('chmod') then
+      vim.health.ok('`chmod` in `PATH`!')
+    else
+      vim.health.warn('`chmod` not in `PATH`!')
+    end
   else
-    vim.health.warn('`chmod` not in `PATH`!')
+    vim.health.error('`Comment.nvim` not installed!')
   end
 end
 

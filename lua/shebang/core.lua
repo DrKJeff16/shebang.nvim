@@ -1,4 +1,3 @@
-local uv = vim.uv or vim.loop
 local ERROR = vim.log.levels.ERROR
 local MODSTR = 'shebang.core'
 local Util = require('shebang.util')
@@ -52,15 +51,15 @@ end
 
 ---@param path string
 ---@param mode? string
-function M.make_executable(path, mode)
+function M.chmod(path, mode)
   Util.validate({
     path = { path, { 'string' } },
     mode = { mode, { 'string', 'nil' }, true },
   })
   mode = Config.check_mode(mode or Config.get().file_mode)
 
-  if not uv.fs_chmod(path, tonumber(mode, 8)) then
-    vim.notify(('(%s.make_executable): Failed to make file executable!'):format(MODSTR), ERROR)
+  if not vim.uv.fs_chmod(path, tonumber(mode, 8)) then
+    vim.notify(('(%s.chmod): Failed to make file executable!'):format(MODSTR), ERROR)
   end
 end
 
@@ -147,7 +146,7 @@ function M.write_shebang(bufnr, prog, env, mode)
   if Config.get().auto_make_executable then
     local path = Util.rstrip('/', vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':p'))
     if vim.fn.filereadable(path) == 1 and vim.fn.filewritable(path) == 1 and pcall(vim.cmd.write, { bang = true }) then
-      M.make_executable(path, mode)
+      M.chmod(path, mode)
     end
   end
 end

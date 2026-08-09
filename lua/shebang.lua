@@ -54,21 +54,18 @@ function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
   require('shebang.config').setup(opts or {})
-  if vim.g.shebang_setup ~= 1 then
-    return
+  if vim.g.shebang_setup == 1 then
+    vim.api.nvim_create_user_command('Shebang', callback, {
+      bang = true,
+      bar = true,
+      complete = completor,
+      desc = 'Create a shebang on top of the current file',
+      nargs = '+',
+    })
   end
-
-  vim.api.nvim_create_user_command('Shebang', callback, {
-    bang = true,
-    nargs = '+',
-    complete = completor,
-    desc = 'Create a shebang on top of the current file',
-  })
 end
 
 local Shebang = setmetatable(M, { ---@type Shebang
-  ---@param self Shebang
-  ---@param k string|integer
   __index = function(self, k)
     if Util.mod_exists('shebang.' .. k) then
       return require('shebang.' .. k)
