@@ -55,7 +55,7 @@ function M.check_mode(mode)
   end
 
   for _, c in ipairs(vim.split(mode, '', { trimempty = true })) do
-    local ok, num = pcall(tonumber, c, 10) ---@type boolean, integer|?
+    local ok, num = pcall(tonumber, c, 10) ---@type boolean, integer|nil|?
     if not (ok and num) or num < 0 or num > 7 then
       mode = M.get_defaults().file_mode
       break
@@ -76,8 +76,9 @@ function M.setup(opts)
     ['opts.file_mode'] = { opts.file_mode, { 'string', 'nil' }, true },
   })
 
-  config = vim.tbl_deep_extend('force', M.get_defaults(), opts)
-  config.file_mode = M.check_mode(config.file_mode or M.get_defaults().file_mode)
+  local defaults = M.get_defaults()
+  config = vim.tbl_deep_extend('force', defaults, opts)
+  config.file_mode = M.check_mode(config.file_mode or defaults.file_mode)
 
   vim.g.shebang_setup = 1
 end

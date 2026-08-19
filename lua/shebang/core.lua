@@ -65,7 +65,7 @@ end
 
 ---@param prog string
 ---@param env? boolean
----@return string|nil shebang
+---@return string|nil|? shebang
 function M.gen_shebang(prog, env)
   Util.validate({
     prog = { prog, { 'string' } },
@@ -95,7 +95,7 @@ function M.write_shebang(bufnr, prog, env, mode)
   end
   mode = mode or Config.get().file_mode
 
-  local ft = nil ---@type string|nil
+  local ft = nil ---@type string|nil|?
   for _, pos in ipairs(prog) do
     if vim.list_contains(vim.tbl_keys(M.langs_dict), pos) then
       ft = M.langs_dict[pos]
