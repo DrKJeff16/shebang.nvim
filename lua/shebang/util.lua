@@ -1,11 +1,4 @@
----Non-legacy validation spec (>=v0.11)
----@class Shebang.ValidateSpec
----@field [1] any
----@field [2] vim.validate.Validator
----@field [3]? boolean
----@field [4]? string
-
-local ERROR = vim.log.levels.ERROR
+---@module 'shebang._meta'
 
 ---@class Shebang.Util
 local M = {}
@@ -23,18 +16,15 @@ function M.is_int(nums, cond)
     cond = true
   end
 
-  if M.is_type('number', nums) then
-    ---@cast nums number
+  if type(nums) == 'number' then
     return nums == math.floor(nums) and nums == math.ceil(nums) and cond
   end
 
-  ---@cast nums number[]
   for _, num in ipairs(nums) do
-    if not M.is_int(num) then
+    if not M.is_int(num, cond) then
       return false
     end
   end
-
   return cond
 end
 
@@ -50,20 +40,20 @@ function M.optget(option, param, param_value)
   })
   param = param or 'buf'
   if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
-    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)), ERROR)
+    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)))
   end
   if param == 'scope' then
     param_value = param_value or 'local'
     if not vim.list_contains({ 'global', 'local' }, param_value) then
-      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)), ERROR)
+      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)))
     end
   end
   if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
-    error('Missing/bad value for `ft` parameter!', ERROR)
+    error('Missing/bad value for `ft` parameter!')
   end
   if vim.list_contains({ 'win', 'buf' }, param) then
     if not (param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0)) then
-      error('Missing/bad value for `win`/`buf` parameter!', ERROR)
+      error('Missing/bad value for `win`/`buf` parameter!')
     end
   end
 
@@ -81,24 +71,24 @@ function M.optset(option, value, param, param_value)
     param_value = { param_value, { 'string', 'number', 'nil' }, true },
   })
   if value == nil then
-    error('Empty option value is unacceptable!', ERROR)
+    error('Empty option value is unacceptable!')
   end
   param = param or 'buf'
   if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
-    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)), ERROR)
+    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)))
   end
   if param == 'scope' then
     param_value = param_value or 'local'
     if not vim.list_contains({ 'global', 'local' }, param_value) then
-      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)), ERROR)
+      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)))
     end
   end
   if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
-    error('Missing/bad value for `ft` parameter!', ERROR)
+    error('Missing/bad value for `ft` parameter!')
   end
   if vim.list_contains({ 'win', 'buf' }, param) then
     if not (param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0)) then
-      error('Missing/bad value for `win`/`buf` parameter!', ERROR)
+      error('Missing/bad value for `win`/`buf` parameter!')
     end
   end
 
@@ -110,7 +100,7 @@ end
 function M.trimempty(list)
   M.validate({ list = { list, { 'table' } } })
   if not vim.islist(list) then
-    error('Parameter table is not list-like!', ERROR)
+    error('Parameter table is not list-like!')
   end
   if vim.tbl_isempty(list) then
     return list
