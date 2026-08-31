@@ -56,9 +56,8 @@ function M.chmod(path, mode)
     path = { path, { 'string' } },
     mode = { mode, { 'string', 'nil' }, true },
   })
-  mode = Config.check_mode(mode or Config.get().file_mode)
 
-  if not vim.uv.fs_chmod(path, tonumber(mode, 8)) then
+  if not vim.uv.fs_chmod(path, tonumber(Config.check_mode(mode or Config.get().file_mode), 8)) then
     vim.notify(('(%s.chmod): Failed to make file executable!'):format(MODSTR), ERROR)
   end
 end
@@ -71,11 +70,11 @@ function M.gen_shebang(prog, env)
     prog = { prog, { 'string' } },
     env = { env, { 'boolean', 'nil' }, true },
   })
+  local config = Config.get()
   if env == nil then
-    env = Config.get().env ~= nil and Config.get().env or Config.get_defaults().env --[[@as boolean]]
+    env = config.env ~= nil and config.env or Config.get_defaults().env
   end
-
-  return '#!' .. (env and ('%s %s'):format(Util.exe_path('env'), prog) or ('%s'):format(Util.exe_path(prog)))
+  return env and ('#!%s %s'):format(Util.exe_path('env'), prog) or ('#!%s'):format(Util.exe_path(prog))
 end
 
 ---@param bufnr integer
@@ -89,11 +88,12 @@ function M.write_shebang(bufnr, prog, env, mode)
     env = { env, { 'boolean', 'nil' }, true },
     mode = { mode, { 'string', 'nil' }, true },
   })
+  local config = Config.get()
   bufnr = Util.is_int(bufnr, bufnr >= 0) and bufnr or 0
   if env == nil then
-    env = Config.get().env
+    env = config.env
   end
-  mode = mode or Config.get().file_mode
+  mode = mode or config.file_mode
 
   local ft = nil ---@type string|nil|?
   for _, pos in ipairs(prog) do
@@ -129,7 +129,7 @@ function M.write_shebang(bufnr, prog, env, mode)
   end
 
   local win = vim.api.nvim_get_current_win()
-  local pos = vim.deepcopy(vim.api.nvim_win_get_cursor(win))
+  local pos = vim.api.nvim_win_get_cursor(win)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   if lines[1]:find('^%#%!.*$') then
     lines[1] = shebang
@@ -143,7 +143,7 @@ function M.write_shebang(bufnr, prog, env, mode)
 
   vim.api.nvim_win_set_cursor(win, pos)
 
-  if Config.get().auto_make_executable then
+  if config.auto_make_executable then
     local path = Util.rstrip('/', vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':p'))
     if vim.fn.filereadable(path) == 1 and vim.fn.filewritable(path) == 1 and pcall(vim.cmd.write, { bang = true }) then
       M.chmod(path, mode)
