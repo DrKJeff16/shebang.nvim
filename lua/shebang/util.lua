@@ -102,14 +102,15 @@ function M.trimempty(list)
   if not vim.islist(list) then
     error('Parameter table is not list-like!')
   end
-  if vim.tbl_isempty(list) then
-    return list
-  end
 
   local trimmed_list = {} ---@type string[]
-  for _, v in ipairs(list) do
-    if v ~= '' then
-      table.insert(trimmed_list, v)
+  if #list == 0 then
+    trimmed_list = list
+  else
+    for _, v in ipairs(list) do
+      if v ~= '' then
+        table.insert(trimmed_list, v)
+      end
     end
   end
   return trimmed_list
@@ -129,8 +130,9 @@ end
 ---If the data passed to the function is not a table,
 ---an error will be raised.
 --- ---
----@param T any[]
----@return any[] NT
+---@generic T: table
+---@param T T
+---@return T NT
 function M.dedup(T)
   M.validate({ T = { T, { 'table' } } })
   if vim.tbl_isempty(T) or not vim.islist(T) then
@@ -140,7 +142,7 @@ function M.dedup(T)
   local NT = {} ---@type any[]
   for _, v in ipairs(T) do
     local not_dup = false
-    if M.is_type('table', v) then
+    if type(v) == 'table' then
       not_dup = not vim.tbl_contains(NT, function(val)
         return vim.deep_equal(val, v)
       end, { predicate = true })
@@ -175,17 +177,16 @@ function M.validate(T)
   if max == 4 then
     ---@cast T table<string, vim.validate.Spec>
     vim.validate(T)
-    return
-  end
-
-  ---@cast T table<string, Shebang.ValidateSpec>
-  for name, spec in pairs(T) do
-    table.insert(spec, 1, name)
-    vim.validate(unpack(spec))
+  else
+    ---@cast T table<string, Shebang.ValidateSpec>
+    for name, spec in pairs(T) do
+      table.insert(spec, 1, name)
+      vim.validate(unpack(spec))
+    end
   end
 end
 
----@param T table<string|integer, any>
+---@param T table
 ---@return integer len
 function M.get_dict_size(T)
   M.validate({ T = { T, { 'table' } } })
@@ -207,8 +208,9 @@ end
 ---If the data passed to the function is not a table,
 ---an error will be raised.
 --- ---
----@param T any[]
----@return any[] T
+---@generic T
+---@param T T[]
+---@return T[] T
 function M.reverse(T)
   M.validate({ T = { T, { 'table' } } })
   if vim.tbl_isempty(T) then
@@ -237,12 +239,9 @@ function M.mod_exists(mod, ret)
   if mod == '' then
     return false
   end
-  local exists, module = pcall(require, mod)
 
-  if ret then
-    return exists, module
-  end
-  return exists
+  local exists, module = pcall(require, mod)
+  return exists, ret and module or nil
 end
 
 ---Checks whether `data` is of type `t` or not.
@@ -261,17 +260,15 @@ end
 function M.executable(exe)
   M.validate({ exe = { exe, { 'string', 'table' } } })
 
-  if M.is_type('string', exe) then
-    ---@cast exe string
-    return vim.fn.executable(exe) == 1
-  end
-
-  ---@cast exe string[]
   local res = false
-  for _, v in ipairs(exe) do
-    res = M.executable(v)
-    if not res then
-      break
+  if type(exe) == 'string' then
+    res = vim.fn.executable(exe) == 1
+  else
+    for _, v in ipairs(exe) do
+      res = M.executable(v)
+      if not res then
+        break
+      end
     end
   end
   return res
@@ -292,29 +289,24 @@ function M.lstrip(char, str)
     return str
   end
 
-  ---@cast char string[]
-  if M.is_type('table', char) then
-    if not vim.tbl_isempty(char) then
-      for _, c in ipairs(char) do
-        str = M.lstrip(c, str)
+  if type(char) == 'table' and #char > 0 then
+    for _, c in ipairs(char) do
+      str = M.lstrip(c, str)
+    end
+  elseif type(char) == 'string' then
+    local i, new_str, other = 1, '', false
+    while i <= str:len() + 1 do
+      if str:sub(i, i) ~= char and not other then
+        other = true
       end
+      if other then
+        new_str = ('%s%s'):format(new_str, str:sub(i, i))
+      end
+      i = i + 1
     end
-    return str
+    str = new_str
   end
-
-  ---@cast char string
-  local i, len, new_str = 1, str:len(), ''
-  local other = false
-  while i <= len + 1 do
-    if str:sub(i, i) ~= char and not other then
-      other = true
-    end
-    if other then
-      new_str = ('%s%s'):format(new_str, str:sub(i, i))
-    end
-    i = i + 1
-  end
-  return new_str
+  return str
 end
 
 ---Right strip given a leading string (or list of strings) within a string, if any.
@@ -332,23 +324,14 @@ function M.rstrip(char, str)
     return str
   end
 
-  ---@cast char string[]
-  if M.is_type('table', char) then
-    if not vim.tbl_isempty(char) then
-      for _, c in ipairs(char) do
-        str = M.rstrip(c, str)
-      end
+  if type(char) == 'table' and #char > 0 then
+    for _, c in ipairs(char) do
+      str = M.rstrip(c, str)
     end
-    return str
+  elseif type(char) == 'string' then
+    str = vim.startswith(str:reverse(), char) and M.lstrip(char, str:reverse()) or str
   end
-
-  ---@cast char string
-  str = str:reverse()
-
-  if not vim.startswith(str, char) then
-    return str:reverse()
-  end
-  return M.lstrip(char, str):reverse()
+  return str
 end
 
 ---Strip given a leading string (or list of strings) within a string, if any, bidirectionally.
@@ -366,22 +349,19 @@ function M.strip(char, str)
     return str
   end
 
-  ---@cast char string[]
-  if M.is_type('table', char) then
-    if not vim.tbl_isempty(char) then
-      for _, c in ipairs(char) do
-        str = M.strip(c, str)
-      end
+  if type(char) == 'table' and #char > 0 then
+    for _, c in ipairs(char) do
+      str = M.strip(c, str)
     end
-    return str
+  elseif type(char) == 'string' then
+    str = M.rstrip(char, M.lstrip(char, str))
   end
-
-  ---@cast char string
-  return M.rstrip(char, M.lstrip(char, str))
+  return str
 end
 
 ---@param exe string
 ---@return string path
+---@nodiscard
 function M.exe_path(exe)
   M.validate({ exe = { exe, { 'string' } } })
 

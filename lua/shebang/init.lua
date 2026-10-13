@@ -17,7 +17,7 @@ function M.setup(opts)
         env = not env
       end
 
-      local mode = nil --[[@as string|nil]]
+      local mode = nil --[[@as string|nil|?]]
       if ctx.fargs[1]:sub(1, 5) == 'mode=' then
         mode = vim.split(ctx.fargs[1], '=', { trimempty = true })[2]
         table.remove(ctx.fargs, 1)
@@ -27,9 +27,7 @@ function M.setup(opts)
     end, {
       bang = true,
       bar = true,
-      ---@param line string
-      ---@return string[] items
-      complete = function(_, line)
+      complete = function(_, line) ---@param line string
         local items = {} ---@type string[]
         local args = vim.split(line, '%s+', { trimempty = false })
         if args[1]:sub(-1) == '!' and #args == 1 then
